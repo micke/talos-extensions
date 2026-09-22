@@ -1,0 +1,36 @@
+# Fork-only (branch `micke`): build storage/mergerfs with upstream's own
+# Makefile/bldr pipeline and push ghcr.io/micke/mergerfs:<mergerfs version>.
+name: micke-mergerfs
+
+on:
+  push:
+    branches: [micke]
+    paths:
+      - storage/mergerfs/**
+      - storage/vars.yaml
+      - Pkgfile
+      - .github/workflows/micke-mergerfs.yaml
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The Makefile derives TAG and SOURCE_DATE_EPOCH from git history.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        run: make mergerfs PLATFORM=linux/amd64,linux/arm64 PUSH=true REGISTRY=ghcr.io USERNAME=micke PROGRESS=plain

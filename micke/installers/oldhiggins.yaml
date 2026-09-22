@@ -1,0 +1,31 @@
+# Custom Talos installer for oldhiggins (mergerfs PoC, 2026-09-22).
+#
+# Mirrors the home-cluster schematic (talos/schematic.yaml.j2 on the `talos`
+# branch) and adds the NAS stack. Image Factory only serves official
+# extensions, so a node that needs `mergerfs` is installed/upgraded from this
+# image instead: `talosctl upgrade --image ghcr.io/micke/installer/oldhiggins:<talosVersion>`.
+# Keep the kernel args and extension list in sync with the schematic.
+talosVersion: v1.14.1
+imager: ghcr.io/siderolabs/imager:v1.14.1@sha256:95e76e773cf8258af2f6e8ac8fae04ce27350051f33fcbda767561c6de7a5884
+extraKernelArgs:
+  - -selinux
+  - selinux=0
+  - thunderbolt.host_reset=0
+  - sysctl.kernel.kexec_load_disabled=1
+systemExtensions:
+  # Same set as the schematic. Digests from factory.talos.dev/version/v1.14.1/extensions/official.
+  - ghcr.io/siderolabs/drbd:9.3.3-v1.14.1@sha256:e6e567baa805c50df53c2d7f0638253fb3f1874264e11dde10cfe01b430b4770
+  - ghcr.io/siderolabs/i915:20260810-v1.14.1@sha256:c9e899f61f4b4359e5b118b81e6bd21c86d71187053d493327a5a1efe45129a6
+  - ghcr.io/siderolabs/intel-ucode:20260812@sha256:e15030b4b774d9043d8e4031d26a0b8c61a96335f00672a01691d9d159f5d404
+  - ghcr.io/siderolabs/thunderbolt:v1.14.1@sha256:33089dfdbcb6ab47420540db47dafaf602e5702272530c13fc69b815da15a420
+  - ghcr.io/siderolabs/util-linux-tools:2.42.2@sha256:304c463024a9e3f427262d847e0a71b5d7548d29fcabd5259a79f405ac15842d
+  - ghcr.io/siderolabs/zfs:2.4.4-v1.14.1@sha256:c2795b1ab52011029ba7abc50434ad64b8a3579a717d2346b754c037df2b32b1
+  # NFS server. nfs-server first ships in extensions v1.15.0-alpha.0 but
+  # declares `>= v1.14.0` and pairs with the same nfs-utils v0.1.1 digest
+  # that v1.14.1 ships.
+  - ghcr.io/siderolabs/nfsd:v1.14.1@sha256:e958b23183f4097cf57ea6590f02c626732649cb7bfe6d85fb67c47e034aa44b
+  - ghcr.io/siderolabs/nfs-utils:v0.1.1@sha256:e1e50e6d2ed05c75a9ead3ebfa3c89f80847f400b2532cdcd9b44197c65be370
+  - ghcr.io/siderolabs/nfs-server:v0.1.0@sha256:ef1f875598b4884a50eac9547c1015d637eb0b32d898275ef027112e203afa07
+  # storage/mergerfs from this fork (micke-mergerfs workflow); resolved to a
+  # digest at build time.
+  - ghcr.io/micke/mergerfs:2.42.0
