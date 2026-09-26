@@ -22,5 +22,9 @@ The upstream workflows are disabled in this fork: they target Sidero's runner gr
   `ghcr.io/micke/installer/<name>:<talosVersion>`. Upgrade a node with
   `talosctl upgrade --image ghcr.io/micke/installer/<name>:<talosVersion>`.
 
+Installers: `oldhiggins` (the mergerfs PoC node, plus Thunderbolt) and `zeus` (the
+NAS: same stack, onboard NIC). Each mirrors the node's Image Factory schematic in the
+home-cluster repo and adds mergerfs and nfs-server.
+
 Locally: `./micke/hack/build-installer.sh oldhiggins` (needs docker, yq, crane) writes
 the installer tarball to `_out/installer-oldhiggins/`.
