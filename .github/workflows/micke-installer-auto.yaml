@@ -1,13 +1,15 @@
 # Fork-only (branch `micke`): build the installers a node can upgrade to and
-# does not have yet. Every few hours, the newest patch of every stable Talos
-# minor from the newest tag in ghcr.io/micke/installer/<name> upwards is built
-# and pushed (micke/hack/auto-installer.sh); tuppr in home-cluster pre-pulls
-# the image before it upgrades the node and waits until it exists.
+# does not have yet. Every half hour (GitHub cannot subscribe to another
+# repository's releases, so this polls the Image Factory; a run with nothing
+# to build takes seconds), the newest patch of every stable Talos minor from
+# the newest tag in ghcr.io/micke/installer/<name> upwards is built and pushed
+# (micke/hack/auto-installer.sh); tuppr in home-cluster pre-pulls the image
+# before it upgrades the node and waits until it exists.
 name: micke-installer-auto
 
 on:
   schedule:
-    - cron: "17 */6 * * *"
+    - cron: "17,47 * * * *"
   workflow_dispatch:
     inputs:
       name:

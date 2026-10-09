@@ -25,7 +25,7 @@ The upstream workflows are disabled in this fork: they target Sidero's runner gr
   that version, `fallbackExtensions` for names the catalogue lacks, `extraExtensions`
   for this fork's images) and prints every digest-pinned ref. For a first installer or
   a rebuild.
-- `micke-installer-auto` (every 6 h, or manual): `micke/hack/auto-installer.sh <name>`
+- `micke-installer-auto` (every 30 min, or manual): `micke/hack/auto-installer.sh <name>`
   builds the newest patch of every stable Talos minor from the newest tag in the
   registry upwards, so an installer exists for each release a node may upgrade to.
   tuppr in home-cluster drives the upgrade and waits for the image.
