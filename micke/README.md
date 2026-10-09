@@ -17,14 +17,26 @@ The upstream workflows are disabled in this fork: they target Sidero's runner gr
 
 - `micke-mergerfs` (on push to `micke`, or manual): upstream's `make mergerfs` pipeline,
   pushing `ghcr.io/micke/mergerfs:<mergerfs version>` for amd64 and arm64.
-- `micke-installer` (manual, input `name`): `micke/hack/build-installer.sh <name> --push`
-  runs the pinned imager over `micke/installers/<name>.yaml` and pushes
-  `ghcr.io/micke/installer/<name>:<talosVersion>`. Upgrade a node with
-  `talosctl upgrade --image ghcr.io/micke/installer/<name>:<talosVersion>`.
+- `micke-installer` (manual, inputs `name` and optional `version`):
+  `micke/hack/build-installer.sh <name> [--version vX.Y.Z] --push` runs that release's
+  imager over `micke/installers/<name>.yaml` and pushes
+  `ghcr.io/micke/installer/<name>:<version>`. The definition names the extensions; the
+  script resolves them per release (official ones from the Image Factory catalogue for
+  that version, `fallbackExtensions` for names the catalogue lacks, `extraExtensions`
+  for this fork's images) and prints every digest-pinned ref. For a first installer or
+  a rebuild.
+- `micke-installer-auto` (every 6 h, or manual): `micke/hack/auto-installer.sh <name>`
+  builds the newest patch of every stable Talos minor from the newest tag in the
+  registry upwards, so an installer exists for each release a node may upgrade to.
+  tuppr in home-cluster drives the upgrade and waits for the image.
+
+Upgrade a node by hand with
+`talosctl upgrade --image ghcr.io/micke/installer/<name>:<version>`.
 
 Installers: `oldhiggins` (the mergerfs PoC node, plus Thunderbolt) and `zeus` (the
 NAS: same stack, onboard NIC). Each mirrors the node's Image Factory schematic in the
 home-cluster repo and adds mergerfs and nfs-server.
 
-Locally: `./micke/hack/build-installer.sh oldhiggins` (needs docker, yq, crane) writes
-the installer tarball to `_out/installer-oldhiggins/`.
+Locally: `./micke/hack/build-installer.sh zeus` (needs docker, yq, jq, curl, crane)
+writes the installer tarball to `_out/installer-zeus/`; `--resolve-only` prints the
+resolved imager and extension refs without building.

@@ -1,5 +1,7 @@
 # Fork-only (branch `micke`): build a Talos installer from
-# micke/installers/<name>.yaml and push ghcr.io/micke/installer/<name>:<talosVersion>.
+# micke/installers/<name>.yaml and push ghcr.io/micke/installer/<name>:<version>.
+# The scheduled micke-installer-auto workflow builds new releases on its own;
+# this one is for a first installer or a rebuild.
 name: micke-installer
 
 on:
@@ -8,7 +10,11 @@ on:
       name:
         description: micke/installers/<name>.yaml to build
         required: true
-        default: oldhiggins
+        default: zeus
+      version:
+        description: Talos release to build for (default from the definition's talosVersion)
+        required: false
+        default: ""
 
 permissions: {}
 
@@ -26,9 +32,11 @@ jobs:
       - name: Build and push
         env:
           NAME: ${{ inputs.name }}
+          VERSION: ${{ inputs.version }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ACTOR: ${{ github.actor }}
         run: |
           [[ "$NAME" =~ ^[a-z0-9-]+$ ]] || { echo "invalid name" >&2; exit 1; }
           echo "$GH_TOKEN" | crane auth login ghcr.io -u "$ACTOR" --password-stdin
-          ./micke/hack/build-installer.sh "$NAME" --push
+          [[ -z "$VERSION" || "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "invalid version" >&2; exit 1; }
+          ./micke/hack/build-installer.sh "$NAME" ${VERSION:+--version "$VERSION"} --push

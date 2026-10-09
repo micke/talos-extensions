@@ -1,0 +1,42 @@
+# Fork-only (branch `micke`): build the installers a node can upgrade to and
+# does not have yet. Every few hours, the newest patch of every stable Talos
+# minor from the newest tag in ghcr.io/micke/installer/<name> upwards is built
+# and pushed (micke/hack/auto-installer.sh); tuppr in home-cluster pre-pulls
+# the image before it upgrades the node and waits until it exists.
+name: micke-installer-auto
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      name:
+        description: micke/installers/<name>.yaml to build
+        required: true
+        default: zeus
+
+concurrency:
+  group: micke-installer-${{ inputs.name || 'zeus' }}
+
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: imjasonh/setup-crane@feee3b6bb0d4c68370f256a4502498c9227e5c6b # v0.7
+      - name: Build and push what is missing
+        env:
+          NAME: ${{ inputs.name || 'zeus' }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          [[ "$NAME" =~ ^[a-z0-9-]+$ ]] || { echo "invalid name" >&2; exit 1; }
+          echo "$GH_TOKEN" | crane auth login ghcr.io -u "$ACTOR" --password-stdin
+          ./micke/hack/auto-installer.sh "$NAME" | tee -a "$GITHUB_STEP_SUMMARY"
